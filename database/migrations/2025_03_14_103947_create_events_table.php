@@ -12,8 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('events', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+            $table->id(); // Tạo trường id tự động tăng và là khóa chính
+            $table->string('title'); // Thêm trường title kiểu chuỗi
+            $table->string('image')->nullable(); // Thêm trường image, có thể null
+            $table->text('description')->nullable(); // Thêm trường description kiểu text, có thể null
+            $table->dateTime('start_date'); // Thêm trường start_date kiểu datetime
+            $table->dateTime('end_date'); // Thêm trường end_date kiểu datetime
+            $table->timestamps(); // Tạo trường created_at và updated_at
         });
     }
 

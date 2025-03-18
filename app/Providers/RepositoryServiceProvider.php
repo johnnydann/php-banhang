@@ -27,7 +27,10 @@ class RepositoryServiceProvider extends ServiceProvider
             CategoryRepository::class
         );
 
-         $this->app->bind(EventRepositoryInterface::class, EventRepository::class);
+         $this->app->bind(
+            EventRepositoryInterface::class, 
+            EventRepository::class
+        );
     }
 
     /**
