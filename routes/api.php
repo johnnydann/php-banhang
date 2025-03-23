@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\ProductApiController;
 use App\Http\Controllers\Api\CategoryApiController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\AuthApiController;
+use App\Http\Controllers\Api\SearchApiController;
+use App\Http\Controllers\Api\AdminApiController;
 use App\Constants\RoleConstants;
 
 /*
@@ -65,6 +67,10 @@ Route::prefix('events')->group(function () {
     });
 });
 
+// Search Routes
+Route::get('/search', [SearchApiController::class, 'search']);
+Route::get('/suggest', [SearchApiController::class, 'suggest']);
+
 // Auth routes
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthApiController::class, 'register']);
@@ -75,4 +81,12 @@ Route::prefix('auth')->group(function () {
         Route::post('/logout', [AuthApiController::class, 'logout']);
         Route::get('/user', [AuthApiController::class, 'user']);
     });
+});
+
+
+//admin api route
+Route::prefix('admin')->group(function () {
+    Route::get('/getall', [AdminApiController::class, 'getUsers'])->name('getall.users');
+    Route::post('/ban/{userId}', [AdminApiController::class, 'banUser'])->name('ban.user');
+    Route::post('/unban/{userId}', [AdminApiController::class, 'unbanUser'])->name('unban.user');
 });

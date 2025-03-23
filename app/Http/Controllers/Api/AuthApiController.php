@@ -25,7 +25,6 @@ class AuthApiController extends Controller
                 'email' => $request->email,
                 'phone_number' => $request->phone_number,
                 'password' => Hash::make($request->password),
-                // 'role_id' => $customerRole->id,
             ]);
 
             // Gán quyền Customer mặc định cho người dùng mới

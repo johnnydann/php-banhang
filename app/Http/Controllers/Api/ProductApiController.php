@@ -513,13 +513,6 @@ class ProductApiController extends Controller
         }
     }
     
-    /**
-     * Tạo response lỗi
-     *
-     * @param string $message
-     * @param int $statusCode
-     * @return JsonResponse
-     */
     private function errorResponse(string $message, int $statusCode): JsonResponse
     {
         return response()->json([
