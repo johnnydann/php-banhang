@@ -9,11 +9,11 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
+    // Trong file migration mới
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->unsignedBigInteger('role_id')->nullable();
-            $table->foreign('role_id')->references('id')->on('roles')->onDelete('set null');
+            $table->string('role')->default('Customer')->change();
         });
     }
 
@@ -23,8 +23,7 @@ return new class extends Migration
     public function down()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropForeign(['role_id']);
-            $table->dropColumn('role_id');
+            $table->string('role')->default('user')->change();
         });
     }
-};  
+};

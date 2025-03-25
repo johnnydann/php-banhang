@@ -23,6 +23,7 @@ class UserSeeder extends Seeder
             'email' => 'admin@example.com',
             'phone_number' => '0123456789',
             'password' => Hash::make('password123'),
+            'role' => 'Admin',
         ]);
         $admin->assignRole(RoleConstants::ROLE_ADMIN);
         
@@ -32,6 +33,7 @@ class UserSeeder extends Seeder
             'email' => 'employee@example.com',
             'phone_number' => '0123456788',
             'password' => Hash::make('password123'),
+            'role' => 'Employee',
         ]);
         $employee->assignRole(RoleConstants::ROLE_EMPLOYEE);
         
@@ -41,6 +43,7 @@ class UserSeeder extends Seeder
             'email' => 'customer@example.com',
             'phone_number' => '0123456787',
             'password' => Hash::make('password123'),
+            'role' => 'Customer',
         ]);
         $customer->assignRole(RoleConstants::ROLE_CUSTOMER);
     }

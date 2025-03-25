@@ -48,38 +48,40 @@ class User extends Authenticatable
         'banned_until' => 'datetime',
     ];
 
-    /**
-     * Khởi tạo events cho model
-     */
-    protected static function booted()
-    {
-        static::saved(function ($user) {
-            // Lấy tên vai trò đầu tiên từ Spatie
-            $roleName = $user->getRoleNames()->first();
-            $role = 'user'; // Giá trị mặc định
+    // protected static function booted()
+    // {
+    //     static::saved(function ($user) {
+    //         // Lấy tên vai trò đầu tiên từ Spatie
+    //         $roleName = $user->getRoleNames()->first();
             
-            if ($roleName === RoleConstants::ROLE_ADMIN) {
-                $role = 'admin';
-            } elseif ($roleName === RoleConstants::ROLE_EMPLOYEE) {
-                $role = 'employee';
-            } elseif ($roleName === RoleConstants::ROLE_CUSTOMER) {
-                $role = 'customer';
-            }
+    //         // Nếu không có role nào được gán thì bỏ qua
+    //         if (!$roleName) {
+    //             return;
+    //         }
             
-            // Cập nhật trực tiếp cột role mà không gọi lại saved event
-            if ($user->role !== $role) {
-                DB::table('users')
-                    ->where('id', $user->id)
-                    ->update(['role' => $role]);
-            }
-        });
-    }
+    //         // Ánh xạ từ tên vai trò Spatie sang giá trị cột role
+    //         $role = 'customer'; // Giá trị mặc định
+            
+    //         if ($roleName === RoleConstants::ROLE_ADMIN) {
+    //             $role = 'admin';
+    //         } elseif ($roleName === RoleConstants::ROLE_EMPLOYEE) {
+    //             $role = 'employee';
+    //         } elseif ($roleName === RoleConstants::ROLE_CUSTOMER) {
+    //             $role = 'customer';
+    //         } elseif ($roleName === RoleConstants::ROLE_COMPANY) {
+    //             $role = 'company';
+    //         }
+            
+    //         // Chỉ cập nhật khi giá trị khác với giá trị hiện tại
+    //         if ($user->role !== $role) {
+    //             // Cập nhật trực tiếp qua DB::table để tránh gọi lại saved event
+    //             DB::table('users')
+    //                 ->where('id', $user->id)
+    //                 ->update(['role' => $role]);
+    //         }
+    //     });
+    // }
 
-    /**
-     * Check if the user is banned
-     *
-     * @return bool
-     */
     public function isBanned()
     {
         return $this->banned_until !== null && now()->lessThan($this->banned_until);
