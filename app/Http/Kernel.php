@@ -68,5 +68,6 @@ class Kernel extends HttpKernel
         'role' => \App\Http\Middleware\CheckRole::class, // Hoặc \Spatie\Permission\Middleware\RoleMiddleware::class nếu bạn muốn dùng middleware của Spatie
         'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
         'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+        \App\Http\Middleware\OptimizeImageHeaders::class
     ];
 }

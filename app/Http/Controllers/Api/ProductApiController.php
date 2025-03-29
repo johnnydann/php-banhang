@@ -82,6 +82,51 @@ class ProductApiController extends Controller
         }
     }
 
+        public function getByCategory(Request $request)
+    {
+        try {
+            $categoryId = $request->query('categoryId');
+            
+            if (!$categoryId) {
+                return response()->json(['message' => 'Category ID is required'], 400);
+            }
+            
+            $products = Product::where('category_id', $categoryId)->get();
+            
+            // Thêm đường dẫn đầy đủ cho ảnh
+            $products->each(function ($product) {
+                $product->fullImageUrl = $product->image 
+                    ? url('storage/' . $product->image) 
+                    : '';
+            });
+            
+            return response()->json($products);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error: ' . $e->getMessage()], 500);
+        }
+    }
+    
+    /**
+     * Đếm số lượng sản phẩm theo danh mục
+     */
+    public function countByCategory(Request $request)
+    {
+        try {
+            $categoryId = $request->query('categoryId');
+            
+            if (!$categoryId) {
+                return response()->json(['message' => 'Category ID is required'], 400);
+            }
+            
+            $count = Product::where('category_id', $categoryId)->count();
+            
+            return response()->json(['count' => $count]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error: ' . $e->getMessage()], 500);
+        }
+    }
+
+
     /**
      * Thêm sản phẩm mới
      *
@@ -232,63 +277,59 @@ class ProductApiController extends Controller
      * @param bool $isUpdate Có phải đang cập nhật hay không
      * @return array Dữ liệu đã được xác thực
      */
-    private function validateProductData(Request $request, bool $isUpdate = false): array
-    {
-        $rules = [
-            'name' => 'required|string|max:100',
-            'price' => 'required|numeric|min:0.01|max:100000000000.00',
-            'quantity' => 'nullable|integer|min:1',
-            'description' => 'nullable|string',
-            'category_id' => 'required|integer|exists:categories,id',
-            'is_active' => 'boolean',
-            'sizes' => 'nullable|array',
-        ];
+    // private function validateProductData(Request $request, bool $isUpdate = false): array
+    // {
+    //     $rules = [
+    //         'name' => 'required|string|max:100',
+    //         'price' => 'required|numeric|min:0.01|max:100000000000.00',
+    //         'quantity' => 'nullable|integer|min:1',
+    //         'description' => 'nullable|string',
+    //         'category_id' => 'required|integer|exists:categories,id',
+    //         'is_active' => 'boolean',
+    //         'sizes' => 'nullable|array',
+    //     ];
         
-        // Quy tắc cho imageFile, chỉ áp dụng khi có file upload
-        if ($request->hasFile('imageFile')) {
-            $rules['imageFile'] = 'nullable|image|max:2048';
-        }
+    //     // Quy tắc cho imageFile, chỉ áp dụng khi có file upload
+    //     if ($request->hasFile('imageFile')) {
+    //         $rules['imageFile'] = 'nullable|image|max:2048';
+    //     }
         
-        // Thêm quy tắc cho cập nhật hình ảnh
-        if ($isUpdate) {
-            $rules['image_url'] = 'nullable|string';
-            $rules['remove_image'] = 'nullable|boolean';
-        }
+    //     // Thêm quy tắc cho cập nhật hình ảnh
+    //     if ($isUpdate) {
+    //         $rules['image_url'] = 'nullable|string';
+    //         $rules['remove_image'] = 'nullable|boolean';
+    //     }
         
-        $validated = $request->validate($rules);
+    //     $validated = $request->validate($rules);
         
-        Log::info('Validated data', [
-            'has_file' => $request->hasFile('imageFile'),
-            'has_image_url' => $request->has('image_url'),
-            'image_url' => $request->input('image_url'),
-            'content_type' => $request->header('Content-Type')
-        ]);
+    //     Log::info('Validated data', [
+    //         'has_file' => $request->hasFile('imageFile'),
+    //         'has_image_url' => $request->has('image_url'),
+    //         'image_url' => $request->input('image_url'),
+    //         'content_type' => $request->header('Content-Type')
+    //     ]);
         
-        return $validated;
-    }
+    //     return $validated;
+    // }
 
-    /**
-     * Thêm thông tin bổ sung vào danh sách sản phẩm
-     *
-     * @param \Illuminate\Support\Collection $products
-     */
-    private function enrichProductsWithData($products): void
-    {
-        foreach ($products as $product) {
-            // Gán giá trị mặc định
-            $product->sizes = $product->sizes ?? [];
-            $product->quantity = $product->quantity ?? 0;
+    // /**
+    //  * Thêm thông tin bổ sung vào danh sách sản phẩm
+    //  *
+    //  * @param \Illuminate\Support\Collection $products
+    //  */
+    // private function enrichProductsWithData($products): void
+    // {
+    //     foreach ($products as $product) {
+    //         // Gán giá trị mặc định
+    //         $product->sizes = $product->sizes ?? [];
+    //         $product->quantity = $product->quantity ?? 0;
             
-            // Thêm thông tin category
-            $this->addCategoryToProduct($product);
-        }
-    }
+    //         // Thêm thông tin category
+    //         $this->addCategoryToProduct($product);
+    //     }
+    // }
 
-    /**
-     * Thêm thông tin category vào sản phẩm
-     *
-     * @param Product $product
-     */
+    /*
     private function addCategoryToProduct($product): void
     {
         if ($product->category_id != 0) {
@@ -300,15 +341,9 @@ class ProductApiController extends Controller
             }
         }
     }
+        */
 
-    /**
-     * Phân trang collection
-     *
-     * @param \Illuminate\Support\Collection $collection
-     * @param int $pageNumber Số trang
-     * @param int $pageSize Số lượng trên mỗi trang
-     * @return \Illuminate\Support\Collection
-     */
+    //phân trang
     private function paginateCollection($collection, $pageNumber, $pageSize)
     {
         return $collection->skip(($pageNumber - 1) * $pageSize)
@@ -316,12 +351,7 @@ class ProductApiController extends Controller
                         ->values();
     }
 
-    /**
-     * Cập nhật thông tin cơ bản của sản phẩm
-     *
-     * @param Product $product
-     * @param array $data
-     */
+    /*
     private function updateBasicProductInfo(Product $product, array $data): void
     {
         $product->name = $data['name'];
@@ -334,66 +364,56 @@ class ProductApiController extends Controller
             Log::info('Updated product sizes', ['sizes' => $data['sizes']]);
         }
     }
+        */
 
-    /**
-     * Xử lý cập nhật hình ảnh sản phẩm
-     *
-     * @param Request $request
-     * @param Product $product
-     */
-    private function handleImageUpdate(Request $request, Product $product): void
-    {
-        $oldImageUrl = $product->image_url;
+    // xu ly cap nhat hinh anh
+    // private function handleImageUpdate(Request $request, Product $product): void
+    // {
+    //     $oldImageUrl = $product->image_url;
         
-        Log::info('Image update request data', [
-            'has_file' => $request->hasFile('imageFile'),
-            'file_valid' => $request->hasFile('imageFile') ? $request->file('imageFile')->isValid() : 'N/A',
-            'has_image_url' => $request->has('image_url'),
-            'image_url' => $request->input('image_url'),
-            'remove_image' => $request->input('remove_image'),
-            'old_image_url' => $oldImageUrl
-        ]);
+    //     Log::info('Image update request data', [
+    //         'has_file' => $request->hasFile('imageFile'),
+    //         'file_valid' => $request->hasFile('imageFile') ? $request->file('imageFile')->isValid() : 'N/A',
+    //         'has_image_url' => $request->has('image_url'),
+    //         'image_url' => $request->input('image_url'),
+    //         'remove_image' => $request->input('remove_image'),
+    //         'old_image_url' => $oldImageUrl
+    //     ]);
         
-        // Trường hợp 1: Có file mới upload
-        if ($request->hasFile('imageFile') && $request->file('imageFile')->isValid()) {
-            $this->handleImageFileUpload($request, $product, $oldImageUrl);
-        }
-        // Trường hợp 2: Cập nhật bằng URL hình ảnh mới
-        // Đảm bảo image_url tồn tại, không null và khác với URL cũ
-        else if ($request->has('image_url') && $request->input('image_url') !== null && $request->input('image_url') !== $oldImageUrl) {
-            $this->handleImageUrlUpdate($request, $product, $oldImageUrl);
-        }
-        // Trường hợp 3: Yêu cầu xóa hình ảnh
-        else if ($request->has('remove_image') && $request->boolean('remove_image') === true) {
-            $this->handleImageRemoval($product, $oldImageUrl);
-        }
-        // Trường hợp 4: Giữ nguyên ảnh cũ
-        else {
-            Log::info('Keeping existing image', ['path' => $oldImageUrl]);
-        }
-    }
+    //     // Trường hợp 1: Có file mới upload
+    //     if ($request->hasFile('imageFile') && $request->file('imageFile')->isValid()) {
+    //         $this->handleImageFileUpload($request, $product, $oldImageUrl);
+    //     }
+    //     // Trường hợp 2: Cập nhật bằng URL hình ảnh mới
+    //     // Đảm bảo image_url tồn tại, không null và khác với URL cũ
+    //     else if ($request->has('image_url') && $request->input('image_url') !== null && $request->input('image_url') !== $oldImageUrl) {
+    //         $this->handleImageUrlUpdate($request, $product, $oldImageUrl);
+    //     }
+    //     // Trường hợp 3: Yêu cầu xóa hình ảnh
+    //     else if ($request->has('remove_image') && $request->boolean('remove_image') === true) {
+    //         $this->handleImageRemoval($product, $oldImageUrl);
+    //     }
+    //     // Trường hợp 4: Giữ nguyên ảnh cũ
+    //     else {
+    //         Log::info('Keeping existing image', ['path' => $oldImageUrl]);
+    //     }
+    // }
 
-    /**
-     * Xử lý upload file ảnh mới
-     *
-     * @param Request $request
-     * @param Product $product
-     * @param string|null $oldImageUrl
-     */
-    private function handleImageFileUpload(Request $request, Product $product, $oldImageUrl): void
-    {
-        // Xóa file ảnh cũ nếu có
-        $this->deleteOldImageIfExists($oldImageUrl);
+    // sử lý file ảnh
+    // private function handleImageFileUpload(Request $request, Product $product, $oldImageUrl): void
+    // {
+    //     // Xóa file ảnh cũ nếu có
+    //     $this->deleteOldImageIfExists($oldImageUrl);
         
-        // Lưu file ảnh mới
-        $this->ensureDirectoryExists();
-        $product->image_url = $this->saveImage($request->file('imageFile'));
+    //     // Lưu file ảnh mới
+    //     $this->ensureDirectoryExists();
+    //     $product->image_url = $this->saveImage($request->file('imageFile'));
         
-        Log::info('New image saved from file', [
-            'old_path' => $oldImageUrl,
-            'new_path' => $product->image_url
-        ]);
-    }
+    //     Log::info('New image saved from file', [
+    //         'old_path' => $oldImageUrl,
+    //         'new_path' => $product->image_url
+    //     ]);
+    // }
 
     /**
      * Xử lý cập nhật URL ảnh mới
@@ -402,21 +422,21 @@ class ProductApiController extends Controller
      * @param Product $product
      * @param string|null $oldImageUrl
      */
-    private function handleImageUrlUpdate(Request $request, Product $product, $oldImageUrl): void
-    {
-        // Xóa file ảnh cũ nếu có
-        if (str_contains($oldImageUrl ?? '', '/' . self::IMAGE_DIRECTORY . '/')) {
-            $this->deleteOldImageIfExists($oldImageUrl);
-        }
+    // private function handleImageUrlUpdate(Request $request, Product $product, $oldImageUrl): void
+    // {
+    //     // Xóa file ảnh cũ nếu có
+    //     if (str_contains($oldImageUrl ?? '', '/' . self::IMAGE_DIRECTORY . '/')) {
+    //         $this->deleteOldImageIfExists($oldImageUrl);
+    //     }
         
-        // Cập nhật URL mới
-        $product->image_url = $request->input('image_url');
+    //     // Cập nhật URL mới
+    //     $product->image_url = $request->input('image_url');
         
-        Log::info('Image URL updated', [
-            'old_path' => $oldImageUrl,
-            'new_path' => $product->image_url
-        ]);
-    }
+    //     Log::info('Image URL updated', [
+    //         'old_path' => $oldImageUrl,
+    //         'new_path' => $product->image_url
+    //     ]);
+    // }
 
     /**
      * Xử lý xóa hình ảnh
@@ -424,16 +444,16 @@ class ProductApiController extends Controller
      * @param Product $product
      * @param string|null $oldImageUrl
      */
-    private function handleImageRemoval(Product $product, $oldImageUrl): void
-    {
-        // Xóa file ảnh cũ nếu có
-        $this->deleteOldImageIfExists($oldImageUrl);
+    // private function handleImageRemoval(Product $product, $oldImageUrl): void
+    // {
+    //     // Xóa file ảnh cũ nếu có
+    //     $this->deleteOldImageIfExists($oldImageUrl);
         
-        // Đặt image_url về null
-        $product->image_url = null;
+    //     // Đặt image_url về null
+    //     $product->image_url = null;
         
-        Log::info('Image removed', ['path' => $oldImageUrl]);
-    }
+    //     Log::info('Image removed', ['path' => $oldImageUrl]);
+    // }
 
     /**
      * Xóa file ảnh cũ nếu tồn tại
@@ -441,15 +461,15 @@ class ProductApiController extends Controller
      * @param string|null $imageUrl
      * @return bool
      */
-    private function deleteOldImageIfExists($imageUrl): bool
-    {
-        if ($imageUrl && str_contains($imageUrl, '/' . self::IMAGE_DIRECTORY . '/') && file_exists(public_path($imageUrl))) {
-            File::delete(public_path($imageUrl));
-            Log::info('Old image deleted', ['path' => $imageUrl]);
-            return true;
-        }
-        return false;
-    }
+    // private function deleteOldImageIfExists($imageUrl): bool
+    // {
+    //     if ($imageUrl && str_contains($imageUrl, '/' . self::IMAGE_DIRECTORY . '/') && file_exists(public_path($imageUrl))) {
+    //         File::delete(public_path($imageUrl));
+    //         Log::info('Old image deleted', ['path' => $imageUrl]);
+    //         return true;
+    //     }
+    //     return false;
+    // }
     
     /**
      * Lưu hình ảnh vào public/productImages

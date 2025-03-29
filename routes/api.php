@@ -9,6 +9,8 @@ use App\Http\Controllers\Api\AuthApiController;
 use App\Http\Controllers\Api\SearchApiController;
 use App\Http\Controllers\Api\AdminApiController;
 use App\Constants\RoleConstants;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Response;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,6 +22,31 @@ use App\Constants\RoleConstants;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+
+
+// Route cho image
+Route::get('/productImages/{filename}', function ($filename) {
+    $path = public_path('productImages/' . $filename);
+    
+    if (!file_exists($path)) {
+        return response()->json(['error' => 'File not found'], 404);
+    }
+    
+    // Lấy dữ liệu file và mime type
+    $file = File::get($path);
+    $type = File::mimeType($path);
+    $size = File::size($path);
+    
+    // Tạo response với các header quan trọng
+    $response = Response::make($file, 200);
+    $response->header('Content-Type', $type);
+    $response->header('Content-Length', $size);
+    $response->header('Cache-Control', 'public, max-age=31536000');
+    $response->header('Accept-Ranges', 'bytes');
+    $response->header('Connection', 'keep-alive');
+    
+    return $response;
+})->where('filename', '.*');
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
@@ -33,6 +60,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::prefix('products')->group(function () {
     Route::get('/getall', [ProductApiController::class, 'getAllProducts']);
     Route::get('/getproductbyid/{id}', [ProductApiController::class, 'getProductById']);
+    Route::get('/getByCategory', [ProductApiController::class, 'getByCategory']);
+    Route::get('/countByCategory', [ProductApiController::class, 'countByCategory']);
     Route::middleware(['auth:sanctum', 'role:' . RoleConstants::ROLE_ADMIN . ',' . RoleConstants::ROLE_EMPLOYEE])->group(function () {
         Route::post('/add', [ProductApiController::class, 'addProduct']);
         Route::put('/update/{id}', [ProductApiController::class, 'updateProduct']);

@@ -37,4 +37,12 @@ class RouteServiceProvider extends ServiceProvider
                 ->group(base_path('routes/web.php'));
         });
     }
+
+    protected function configureRateLimiting(): void
+    {
+        // Thiết lập mặc định cho API là 60 requests trong 1 phút
+        RateLimiter::for('api', function (Request $request) {
+            return Limit::perMinute(120); // Tăng lên 120 requests/phút
+        });
+    }
 }
