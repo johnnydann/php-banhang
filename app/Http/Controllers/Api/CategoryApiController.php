@@ -28,7 +28,7 @@ class CategoryApiController extends Controller
     /**
      * Lấy danh mục theo ID
      */
-    public function getCategoryById(Request $request)
+    public function getCategoryById(Request $request, int $id)
     {
         $id = $request->query('id');
         $category = $this->categoryRepository->getById($id);
@@ -59,11 +59,9 @@ class CategoryApiController extends Controller
     /**
      * Cập nhật danh mục
      */
-    public function updateCategory(Request $request)
+    public function updateCategory(Request $request, int $id)
     {
-        try {
-            $id = $request->query('id');
-            
+        try {            
             $request->validate([
                 'name' => 'required|string|max:50',
                 'slug' => 'required|string|unique:categories,slug,' . $id
@@ -91,9 +89,8 @@ class CategoryApiController extends Controller
     /**
      * Xóa danh mục
      */
-    public function deleteCategory(Request $request)
+    public function deleteCategory(Request $request, int $id)
     {
-        $id = $request->query('id');
         $category = $this->categoryRepository->getById($id);
         
         if (!$category) {

@@ -25,6 +25,7 @@ class AuthApiController extends Controller
                 'email' => $request->email,
                 'phone_number' => $request->phone_number,
                 'password' => Hash::make($request->password),
+                // 'password_confirmation' => Hash::make($request->password_confirmation),
                 'role' => 'Customer',
             ]);
 

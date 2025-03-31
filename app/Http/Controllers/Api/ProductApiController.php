@@ -206,9 +206,6 @@ class ProductApiController extends Controller
 
     /**
      * Xóa sản phẩm (xóa mềm)
-     *
-     * @param int $id
-     * @return JsonResponse
      */
     public function deleteProduct($id): JsonResponse
     {
@@ -272,64 +269,60 @@ class ProductApiController extends Controller
 
     /**
      * Xác thực dữ liệu sản phẩm
-     *
-     * @param Request $request
-     * @param bool $isUpdate Có phải đang cập nhật hay không
-     * @return array Dữ liệu đã được xác thực
      */
-    // private function validateProductData(Request $request, bool $isUpdate = false): array
-    // {
-    //     $rules = [
-    //         'name' => 'required|string|max:100',
-    //         'price' => 'required|numeric|min:0.01|max:100000000000.00',
-    //         'quantity' => 'nullable|integer|min:1',
-    //         'description' => 'nullable|string',
-    //         'category_id' => 'required|integer|exists:categories,id',
-    //         'is_active' => 'boolean',
-    //         'sizes' => 'nullable|array',
-    //     ];
+    private function validateProductData(Request $request, bool $isUpdate = false): array
+    {
+        $rules = [
+            'name' => 'required|string|max:100',
+            'price' => 'required|numeric|min:0.01|max:100000000000.00',
+            'quantity' => 'nullable|integer|min:1',
+            'description' => 'nullable|string',
+            'category_id' => 'required|integer|exists:categories,id',
+            'is_active' => 'boolean',
+            'sizes' => 'nullable|array',
+        ];
         
-    //     // Quy tắc cho imageFile, chỉ áp dụng khi có file upload
-    //     if ($request->hasFile('imageFile')) {
-    //         $rules['imageFile'] = 'nullable|image|max:2048';
-    //     }
+        // Quy tắc cho imageFile, chỉ áp dụng khi có file upload
+        if ($request->hasFile('imageFile')) {
+            $rules['imageFile'] = 'nullable|image|max:2048';
+        }
         
-    //     // Thêm quy tắc cho cập nhật hình ảnh
-    //     if ($isUpdate) {
-    //         $rules['image_url'] = 'nullable|string';
-    //         $rules['remove_image'] = 'nullable|boolean';
-    //     }
+        // Thêm quy tắc cho cập nhật hình ảnh
+        if ($isUpdate) {
+            $rules['image_url'] = 'nullable|string';
+            $rules['remove_image'] = 'nullable|boolean';
+        }
         
-    //     $validated = $request->validate($rules);
+        $validated = $request->validate($rules);
         
-    //     Log::info('Validated data', [
-    //         'has_file' => $request->hasFile('imageFile'),
-    //         'has_image_url' => $request->has('image_url'),
-    //         'image_url' => $request->input('image_url'),
-    //         'content_type' => $request->header('Content-Type')
-    //     ]);
+        Log::info('Validated data', [
+            'has_file' => $request->hasFile('imageFile'),
+            'has_image_url' => $request->has('image_url'),
+            'image_url' => $request->input('image_url'),
+            'content_type' => $request->header('Content-Type')
+        ]);
         
-    //     return $validated;
-    // }
+        return $validated;
+    }
 
     // /**
     //  * Thêm thông tin bổ sung vào danh sách sản phẩm
     //  *
     //  * @param \Illuminate\Support\Collection $products
     //  */
-    // private function enrichProductsWithData($products): void
-    // {
-    //     foreach ($products as $product) {
-    //         // Gán giá trị mặc định
-    //         $product->sizes = $product->sizes ?? [];
-    //         $product->quantity = $product->quantity ?? 0;
+    private function enrichProductsWithData($products): void
+    {
+        foreach ($products as $product) {
+            // Gán giá trị mặc định
+            $product->sizes = $product->sizes ?? [];
+            $product->quantity = $product->quantity ?? 0;
             
-    //         // Thêm thông tin category
-    //         $this->addCategoryToProduct($product);
-    //     }
-    // }
+            // Thêm thông tin category
+            $this->addCategoryToProduct($product);
+        }
+    }
 
-    /*
+    
     private function addCategoryToProduct($product): void
     {
         if ($product->category_id != 0) {
@@ -341,7 +334,7 @@ class ProductApiController extends Controller
             }
         }
     }
-        */
+        
 
     //phân trang
     private function paginateCollection($collection, $pageNumber, $pageSize)
@@ -350,21 +343,6 @@ class ProductApiController extends Controller
                         ->take($pageSize)
                         ->values();
     }
-
-    /*
-    private function updateBasicProductInfo(Product $product, array $data): void
-    {
-        $product->name = $data['name'];
-        $product->price = $data['price'];
-        $product->quantity = $data['quantity'] ?? $product->quantity;
-        $product->description = $data['description'] ?? $product->description;
-        $product->category_id = $data['category_id'];
-        if (array_key_exists('sizes', $data)) {
-            $product->sizes = $data['sizes'];
-            Log::info('Updated product sizes', ['sizes' => $data['sizes']]);
-        }
-    }
-        */
 
     // xu ly cap nhat hinh anh
     // private function handleImageUpdate(Request $request, Product $product): void
@@ -400,20 +378,20 @@ class ProductApiController extends Controller
     // }
 
     // sử lý file ảnh
-    // private function handleImageFileUpload(Request $request, Product $product, $oldImageUrl): void
-    // {
-    //     // Xóa file ảnh cũ nếu có
-    //     $this->deleteOldImageIfExists($oldImageUrl);
+    private function handleImageFileUpload(Request $request, Product $product, $oldImageUrl): void
+    {
+        // Xóa file ảnh cũ nếu có
+        $this->deleteOldImageIfExists($oldImageUrl);
         
-    //     // Lưu file ảnh mới
-    //     $this->ensureDirectoryExists();
-    //     $product->image_url = $this->saveImage($request->file('imageFile'));
+        // Lưu file ảnh mới
+        $this->ensureDirectoryExists();
+        $product->image_url = $this->saveImage($request->file('imageFile'));
         
-    //     Log::info('New image saved from file', [
-    //         'old_path' => $oldImageUrl,
-    //         'new_path' => $product->image_url
-    //     ]);
-    // }
+        Log::info('New image saved from file', [
+            'old_path' => $oldImageUrl,
+            'new_path' => $product->image_url
+        ]);
+    }
 
     /**
      * Xử lý cập nhật URL ảnh mới
@@ -461,15 +439,15 @@ class ProductApiController extends Controller
      * @param string|null $imageUrl
      * @return bool
      */
-    // private function deleteOldImageIfExists($imageUrl): bool
-    // {
-    //     if ($imageUrl && str_contains($imageUrl, '/' . self::IMAGE_DIRECTORY . '/') && file_exists(public_path($imageUrl))) {
-    //         File::delete(public_path($imageUrl));
-    //         Log::info('Old image deleted', ['path' => $imageUrl]);
-    //         return true;
-    //     }
-    //     return false;
-    // }
+    private function deleteOldImageIfExists($imageUrl): bool
+    {
+        if ($imageUrl && str_contains($imageUrl, '/' . self::IMAGE_DIRECTORY . '/') && file_exists(public_path($imageUrl))) {
+            File::delete(public_path($imageUrl));
+            Log::info('Old image deleted', ['path' => $imageUrl]);
+            return true;
+        }
+        return false;
+    }
     
     /**
      * Lưu hình ảnh vào public/productImages

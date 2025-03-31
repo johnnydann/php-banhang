@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\AuthApiController;
 use App\Http\Controllers\Api\SearchApiController;
 use App\Http\Controllers\Api\AdminApiController;
+use App\Http\Controllers\Api\ShoppingCartController;
 use App\Constants\RoleConstants;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Response;
@@ -75,12 +76,12 @@ Route::prefix('products')->group(function () {
 // Category API Routes
 Route::prefix('categories')->group(function () {
     Route::get('/getall', [CategoryApiController::class, 'getAllCategories']);
-    Route::get('/getbyId', [CategoryApiController::class, 'getCategoryById']);
+    Route::get('/getbyId/{id}', [CategoryApiController::class, 'getCategoryById']);
      // Protected routes (Admin & Employee only)
     Route::middleware(['auth:sanctum', 'role:' . RoleConstants::ROLE_ADMIN . ',' . RoleConstants::ROLE_EMPLOYEE])->group(function () {
         Route::post('/add', [CategoryApiController::class, 'addCategory']);
-        Route::put('/update', [CategoryApiController::class, 'updateCategory']);
-        Route::delete('/delete', [CategoryApiController::class, 'deleteCategory']);
+        Route::put('/update/{id}', [CategoryApiController::class, 'updateCategory']);
+        Route::delete('/delete/{id}', [CategoryApiController::class, 'deleteCategory']);
     });
 });
 
@@ -91,7 +92,8 @@ Route::prefix('events')->group(function () {
    // Protected routes (Admin & Employee only)
     Route::middleware(['auth:sanctum', 'role:' . RoleConstants::ROLE_ADMIN . ',' . RoleConstants::ROLE_EMPLOYEE])->group(function () {
         Route::post('/add', [EventController::class, 'addEvent']);
-        Route::match(['put', 'post'], '/update/{id}', [EventController::class, 'updateEvent']);
+        Route::put('/update/{id}', [EventController::class, 'updateEvent']);
+        Route::post('/update/{id}', [EventController::class, 'updateEvent']);
         Route::delete('/delete/{id}', [EventController::class, 'deleteEvent']);
     });
 });
@@ -118,4 +120,18 @@ Route::prefix('admin')->group(function () {
     Route::get('/getall', [AdminApiController::class, 'getUsers'])->name('getall.users');
     Route::post('/ban/{userId}', [AdminApiController::class, 'banUser'])->name('ban.user');
     Route::post('/unban/{userId}', [AdminApiController::class, 'unbanUser'])->name('unban.user');
+});
+
+// Shopping Cart Routes
+Route::middleware(['web'])->prefix('cart')->group(function () {
+    Route::get('/', [ShoppingCartController::class, 'getCart']);
+    Route::post('/add', [ShoppingCartController::class, 'addToCart']);
+    Route::post('/remove', [ShoppingCartController::class, 'removeFromCart']);
+    Route::post('/update-quantity', [ShoppingCartController::class, 'updateQuantity']);
+});
+
+Route::middleware(['web', 'auth:sanctum'])->prefix('cart')->group(function () {
+    Route::post('/checkout', [ShoppingCartController::class, 'checkout']);
+    Route::get('/cash-confirmation', [ShoppingCartController::class, 'cashConfirmation']);
+    Route::get('/payment-callback', [ShoppingCartController::class, 'paymentCallback']);
 });
