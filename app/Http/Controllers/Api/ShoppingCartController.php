@@ -25,8 +25,6 @@ class ShoppingCartController extends Controller
 
     /**
      * Get the current cart
-     *
-     * @return \Illuminate\Http\JsonResponse
      */
     public function getCart()
     {
@@ -37,9 +35,6 @@ class ShoppingCartController extends Controller
 
     /**
      * Add a product to the cart
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\JsonResponse
      */
     public function addToCart(Request $request)
     {
@@ -75,9 +70,6 @@ class ShoppingCartController extends Controller
 
     /**
      * Remove a product from the cart
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\JsonResponse
      */
     public function removeFromCart(Request $request)
     {
@@ -102,15 +94,13 @@ class ShoppingCartController extends Controller
 
     /**
      * Update the quantity of a product in the cart
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\JsonResponse
      */
-    public function updateQuantity(Request $request)
+   public function updateQuantity(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'product_id' => 'required|integer',
-            'quantity' => 'required|integer|min:0',
+            'quantity' => 'required|integer|min:1',
+            'replace' => 'sometimes|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -119,21 +109,36 @@ class ShoppingCartController extends Controller
 
         $productId = $request->input('product_id');
         $quantity = $request->input('quantity');
+        $replace = $request->input('replace', false);
 
-        // Update the quantity of the product in the cart
-        $cart = $this->cartService->updateQuantity($productId, $quantity);
+        $currentCart = $this->cartService->getCart();
+        $items = collect($currentCart['items']);
 
-        return response()->json([
-            'message' => 'Product quantity updated successfully!',
-            'cart' => $cart
-        ]);
+        $existingItem = $items->firstWhere(function ($item) use ($productId) {
+            return $item['product_id'] == $productId;
+        });
+
+        if ($existingItem && !$replace) {
+            $newQuantity = $existingItem['quantity'] + $quantity;
+            
+            $cart = $this->cartService->updateQuantity($productId, $newQuantity);
+            
+            return response()->json([
+                'message' => 'Product quantity increased successfully!',
+                'cart' => $cart
+            ]);
+        } else {
+            $cart = $this->cartService->updateQuantity($productId, $quantity);
+            
+            return response()->json([
+                'message' => 'Product quantity updated successfully!',
+                'cart' => $cart
+            ]);
+        }
     }
 
     /**
      * Process the checkout
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\JsonResponse
      */
     public function checkout(Request $request)
     {
@@ -160,6 +165,7 @@ class ShoppingCartController extends Controller
         $order->total_price = $cart['total'];
         $order->shipping_address = $request->input('shipping_address');
         $order->notes = $request->input('notes');
+        $order->payment_method = $request->input('payment_method'); 
         $order->save();
 
         // Create order details
@@ -209,8 +215,6 @@ class ShoppingCartController extends Controller
 
     /**
      * Handle cash payment confirmation
-     *
-     * @return \Illuminate\Http\JsonResponse
      */
     public function cashConfirmation()
     {
@@ -219,9 +223,6 @@ class ShoppingCartController extends Controller
 
     /**
      * Handle MoMo payment callback
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\JsonResponse
      */
     public function paymentCallback(Request $request)
     {

@@ -124,10 +124,10 @@ Route::prefix('admin')->group(function () {
 
 // Shopping Cart Routes
 Route::middleware(['web'])->prefix('cart')->group(function () {
-    Route::get('/', [ShoppingCartController::class, 'getCart']);
+    Route::get('/get', [ShoppingCartController::class, 'getCart']);
     Route::post('/add', [ShoppingCartController::class, 'addToCart']);
     Route::post('/remove', [ShoppingCartController::class, 'removeFromCart']);
-    Route::post('/update-quantity', [ShoppingCartController::class, 'updateQuantity']);
+    Route::post('/update', [ShoppingCartController::class, 'updateQuantity']);
 });
 
 Route::middleware(['web', 'auth:sanctum'])->prefix('cart')->group(function () {
