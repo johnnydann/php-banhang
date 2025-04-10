@@ -6,6 +6,30 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
+# 📌 Dự Án: **Bán-hàng**
+
+## 📖 Giới thiệu
+Đây là dự án **Bán-hàng** được phát triển phục vụ cho bài báo cáo cuối môn.  
+Nhóm chúng tôi hy vọng dự án sẽ đáp ứng kỳ vọng về cả chức năng và chất lượng.
+
+---
+
+## 👥 Thành viên nhóm
+
+| Họ và Tên               | MSSV         | Vai trò          |
+|-------------------------|--------------|------------------|
+| Đặng Phương Nam         | 2180605882   | Nhóm trưởng      |
+| Bạch Thiện Nhân         | 2180606576   | Thành viên       |
+| Vũ Ngọc Quang           | 2180601228   | Thành viên       |
+| Nguyễn Quốc Cường       | 2180606094   | Thành viên       |
+| Nguyễn Thiện Nhân       | 2180605904   | Thành viên       |
+
+---
+## 🛠️ Công nghệ sử dụng
+
+- 💻 **Ngôn ngữ lập trình**: `PHP`  
+
+---
 
 ## About Laravel
 
