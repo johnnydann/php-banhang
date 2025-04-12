@@ -31,7 +31,54 @@ class AdminApiController extends Controller
         $listUsers = User::all();
         return response()->json($listUsers);
     }
+    public function getUserById($id)
+    {
+        $user = User::find($id);
+        if ($user) {
+            return response()->json($user);
+        }
+        return response()->json(['error' => 'User not found'], 404);
+    }
     
+    public function updateUser(Request $request, $id)
+    {
+        try {
+            // Kiểm tra người dùng tồn tại hay không
+            $user = User::find($id);
+            if (!$user) {
+                return response()->json(['error' => 'User not found'], 404);
+            }
+
+            // Validate dữ liệu nhập vào
+            $validatedData = $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|max:255|unique:users,email,' . $id,
+                'phone_number' => 'nullable|string|max:15', // Validation cho số điện thoại
+            ]);
+
+            // Cập nhật thông tin người dùng
+            $user->name = $validatedData['name'];
+            $user->email = $validatedData['email'];
+            $user->phone_number = $validatedData['phone_number'] ?? $user->phone_number; // Cập nhật số điện thoại nếu có
+
+            $user->save(); // Lưu vào database
+
+            return response()->json(['success' => true, 'message' => 'User updated successfully', 'user' => $user]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Update failed: ' . $e->getMessage()], 500);
+        }
+    }
+
+
+    public function deleteUser($id)
+    {
+        $user = User::find($id);
+        if ($user) {
+            $user->delete();
+            return response()->json(['success' => true]);
+        }
+        return response()->json(['error' => 'User not found'], 404);
+    }
     /**
      * Ban a user
      *

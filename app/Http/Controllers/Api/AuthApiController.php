@@ -121,6 +121,7 @@ class AuthApiController extends Controller
         $permissions = $user->getAllPermissions()->pluck('name');
         
         return response()->json([
+            'success' => true,
             'user' => $user,
             'roles' => $roles,
             'permissions' => $permissions

@@ -29,7 +29,7 @@ class ShoppingCartController extends Controller
     public function getCart()
     {
         $cart = $this->cartService->getCart();
-        
+
         return response()->json($cart);
     }
 
@@ -95,7 +95,7 @@ class ShoppingCartController extends Controller
     /**
      * Update the quantity of a product in the cart
      */
-   public function updateQuantity(Request $request)
+    public function updateQuantity(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'product_id' => 'required|integer',
@@ -120,16 +120,16 @@ class ShoppingCartController extends Controller
 
         if ($existingItem && !$replace) {
             $newQuantity = $existingItem['quantity'] + $quantity;
-            
+
             $cart = $this->cartService->updateQuantity($productId, $newQuantity);
-            
+
             return response()->json([
                 'message' => 'Product quantity increased successfully!',
                 'cart' => $cart
             ]);
         } else {
             $cart = $this->cartService->updateQuantity($productId, $quantity);
-            
+
             return response()->json([
                 'message' => 'Product quantity updated successfully!',
                 'cart' => $cart
@@ -153,65 +153,57 @@ class ShoppingCartController extends Controller
         }
 
         $cart = $this->cartService->getCart();
-        
         if (empty($cart['items'])) {
             return response()->json(['message' => 'Cart is empty.'], 400);
         }
 
-        // Create a new order
-        $order = new Order();
-        $order->user_id = Auth::id() ?? null; // If user is not logged in, user_id will be null
-        $order->order_date = now();
-        $order->total_price = $cart['total'];
-        $order->shipping_address = $request->input('shipping_address');
-        $order->notes = $request->input('notes');
-        $order->payment_method = $request->input('payment_method'); 
-        $order->save();
+        if ($request->payment_method === 'online') {
+            $orderId = uniqid();
+            session(['temp_order_id' => $orderId, 'shipping_address' => $request->shipping_address, 'notes' => $request->notes]);
 
-        // Create order details
-        foreach ($cart['items'] as $item) {
-            $orderDetail = new OrderDetail();
-            $orderDetail->order_id = $order->id;
-            $orderDetail->product_id = $item['product_id'];
-            $orderDetail->quantity = $item['quantity'];
-            $orderDetail->price = $item['price'];
-            $orderDetail->save();
+            $response = $this->momoService->createPayment([
+                'order_id' => $orderId,
+                'amount' => $cart['total'],
+                'order_info' => 'Thanh toán đơn hàng online'
+            ]);
+
+            if (!$response['success'] || !isset($response['pay_url'])) {
+                return response()->json(['message' => 'Payment request failed. Please try again.'], 400);
+            }
+
+            return response()->json(['pay_url' => $response['pay_url']]);
         }
-
-        // Process payment based on the selected method
-        $paymentMethod = $request->input('payment_method');
-
-        if ($paymentMethod === 'cash') {
-            // Clear the cart after successful order
+        if ($request->payment_method === 'cash') {
+            // Tạo đơn hàng ngay lập tức khi thanh toán bằng tiền mặt
+            $order = new Order();
+            $order->user_id = Auth::id();
+            $order->order_date = now();
+            $order->total_price = $cart['total'];
+            $order->shipping_address = $request->input('shipping_address');
+            $order->notes = $request->input('notes');
+            $order->payment_method = 'cash';
+            $order->status = 'paid'; // Đặt trạng thái đơn hàng là 'paid'
+            $order->save();
+        
+            foreach ($cart['items'] as $item) {
+                OrderDetail::create([
+                    'order_id' => $order->id,
+                    'product_id' => $item['product_id'],
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price']
+                ]);
+            }
+        
             $this->cartService->clearCart();
-
+        
             return response()->json([
                 'message' => 'Cash payment confirmed.',
                 'order_id' => $order->id
             ]);
-        } elseif ($paymentMethod === 'online') {
-            // Create MoMo payment request
-            $orderInfo = [
-                'order_id' => $order->id,
-                'amount' => $cart['total'],
-                'order_info' => "Payment for order #{$order->id}"
-            ];
-
-            $response = $this->momoService->createPayment($orderInfo);
-
-            if ($response['success'] && isset($response['pay_url'])) {
-                return response()->json([
-                    'pay_url' => $response['pay_url']
-                ]);
-            } else {
-                return response()->json([
-                    'message' => 'Payment request failed. Please try again.'
-                ], 400);
-            }
         }
-
-        return response()->json(['message' => 'Invalid payment method.'], 400);
+        
     }
+
 
     /**
      * Handle cash payment confirmation
@@ -231,7 +223,7 @@ class ShoppingCartController extends Controller
         if ($response['success']) {
             // Clear the cart after successful payment
             $this->cartService->clearCart();
-            
+
             return response()->json([
                 'message' => 'Payment successful!',
                 'data' => $response
