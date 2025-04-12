@@ -2,21 +2,14 @@
 // app/Models/CartItem.php
 namespace App\Models;
 
-class CartItem
-{
-    public $id;
-    public $product_id;
-    public $name;
-    public $image;
-    public $price;
-    public $quantity;
+use Illuminate\Database\Eloquent\Model;
 
-    public function __construct($product_id, $name, $image, $price, $quantity = 1)
+class CartItem extends Model
+{
+    protected $fillable = ['user_id', 'product_id', 'quantity'];
+
+    public function product()
     {
-        $this->product_id = $product_id;
-        $this->name = $name;
-        $this->image = $image;
-        $this->price = $price;
-        $this->quantity = $quantity;
+        return $this->belongsTo(Product::class);
     }
 }
