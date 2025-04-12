@@ -28,9 +28,9 @@ class CategoryApiController extends Controller
     /**
      * Lấy danh mục theo ID
      */
-    public function getCategoryById(Request $request, int $id)
+    public function getCategoryById(int $id)
     {
-        $id = $request->query('id');
+        //$id = $request->query('id');
         $category = $this->categoryRepository->getById($id);
         
         if (!$category) {
