@@ -12,6 +12,8 @@ use App\Http\Controllers\Api\ShoppingCartController;
 use App\Constants\RoleConstants;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Cache\RateLimiting\Limit;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,7 +26,9 @@ use Illuminate\Support\Facades\Response;
 |
 */
 
-
+RateLimiter::for('api', function (Request $request) {
+    return Limit::perMinute(60)->by($request->ip()); // <- tăng lên nếu cần
+});
 // Route cho image
 Route::get('/productImages/{filename}', function ($filename) {
     $path = public_path('productImages/' . $filename);
@@ -53,10 +57,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-// Ví dụ route chỉ dành cho Admin
-// Route::middleware(['auth:sanctum', 'role:Admin'])->group(function () {
-//     Route::get('/admin/dashboard', [AdminController::class, 'dashboard']);
-// });
 
 Route::prefix('products')->group(function () {
     Route::get('/getall', [ProductApiController::class, 'getAllProducts']);
@@ -84,6 +84,7 @@ Route::prefix('categories')->group(function () {
         Route::delete('/delete/{id}', [CategoryApiController::class, 'deleteCategory']);
     });
 });
+
 
 // Route cho Event
 Route::prefix('events')->group(function () {
@@ -120,18 +121,21 @@ Route::prefix('admin')->group(function () {
     Route::get('/getall', [AdminApiController::class, 'getUsers'])->name('getall.users');
     Route::post('/ban/{userId}', [AdminApiController::class, 'banUser'])->name('ban.user');
     Route::post('/unban/{userId}', [AdminApiController::class, 'unbanUser'])->name('unban.user');
+    Route::get('/getbyId/{id}', [AdminApiController::class, 'getUserById'])->name('getbyId.users');
+    Route::post('/add', [AdminApiController::class, 'createUser'])->name('add.users');
+    Route::put('/update/{id}', [AdminApiController::class, 'updateUser'])->name('update.users');
+    Route::delete('/delete/{id}', [AdminApiController::class, 'deleteUser'])->name('delete.users');
 });
 
 // Shopping Cart Routes
-Route::middleware(['web'])->prefix('cart')->group(function () {
-    Route::get('/get', [ShoppingCartController::class, 'getCart']);
+Route::middleware(['auth:sanctum'])->prefix('cart')->group(function () {
     Route::post('/add', [ShoppingCartController::class, 'addToCart']);
     Route::post('/remove', [ShoppingCartController::class, 'removeFromCart']);
     Route::post('/update', [ShoppingCartController::class, 'updateQuantity']);
-});
-
-Route::middleware(['web', 'auth:sanctum'])->prefix('cart')->group(function () {
+    Route::get('/get', [ShoppingCartController::class, 'getCart']);
     Route::post('/checkout', [ShoppingCartController::class, 'checkout']);
     Route::get('/cash-confirmation', [ShoppingCartController::class, 'cashConfirmation']);
-    Route::get('/payment-callback', [ShoppingCartController::class, 'paymentCallback']);
+    Route::get('/cart/thank-you', fn() => 'Cảm ơn bạn đã thanh toán thành công!');
 });
+
+
