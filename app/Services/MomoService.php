@@ -40,18 +40,41 @@ class MomoService
     {
         $requestId = time() . "";
         $orderId = $orderInfo['order_id'];
-        $amount = $orderInfo['amount'];
-        $orderInfo = $orderInfo['order_info'] ?? "Payment for order #$orderId";
+        $amountUsd = $orderInfo['amount'];
+        $exchangeRate = 24000; // hoặc config('payment.exchange_rate')
+        $amountVnd = round($amountUsd * $exchangeRate);
         
-        $rawHash = "partnerCode=" . $this->partnerCode .
-            "&accessKey=" . $this->accessKey .
-            "&requestId=" . $requestId .
+        // lưu lại log dễ debug
+        Log::info('Converted USD to VND', [
+            'usd' => $amountUsd,
+            'vnd' => $amountVnd,
+        ]);
+        
+        $amount = (string) $amountVnd;
+        
+
+        $orderInfo = $orderInfo['order_info'] ?? "Payment for order #$orderId";
+        Log::info('DEBUG MoMo ENV values', [
+            'returnUrl' => $this->returnUrl,
+            'notifyUrl' => $this->notifyUrl
+        ]);
+        Log::info('DEBUG MoMo Request Data', [
+            'requestId' => $requestId,
+            'orderId' => $orderId,
+            'amount' => $amount,
+            'orderInfo' => $orderInfo
+        ]);        
+        $rawHash = "accessKey=" . $this->accessKey .
             "&amount=" . $amount .
+            "&extraData=" .
+            "&ipnUrl=" . $this->notifyUrl .
             "&orderId=" . $orderId .
             "&orderInfo=" . $orderInfo .
-            "&returnUrl=" . $this->returnUrl .
-            "&notifyUrl=" . $this->notifyUrl .
-            "&extraData=";
+            "&partnerCode=" . $this->partnerCode .
+            "&redirectUrl=" . $this->returnUrl .
+            "&requestId=" . $requestId .
+            "&requestType=" . $this->requestType;
+    
             
         $signature = hash_hmac('sha256', $rawHash, $this->secretKey);
         
@@ -62,15 +85,17 @@ class MomoService
             'amount' => $amount,
             'orderId' => $orderId,
             'orderInfo' => $orderInfo,
-            'returnUrl' => $this->returnUrl,
-            'notifyUrl' => $this->notifyUrl,
+            'redirectUrl' => $this->returnUrl,
+            'ipnUrl' => $this->notifyUrl,
             'extraData' => '',
             'requestType' => $this->requestType,
             'signature' => $signature
         ];
-        
+        Log::info('MoMo Request Data', $requestData);
+
         try {
             $response = Http::post($this->apiUrl, $requestData);
+            Log::info('MoMo Raw Response', ['body' => $response->body()]);
             
             if ($response->successful()) {
                 $responseData = $response->json();
@@ -128,7 +153,7 @@ class MomoService
         $rawHash = "partnerCode=" . $partnerCode .
             "&accessKey=" . $accessKey .
             "&requestId=" . $requestId .
-            "&amount=" . $amount .
+            "&amount=" . (string) $amount .
             "&orderId=" . $orderId .
             "&orderInfo=" . $orderInfo .
             "&orderType=" . $orderType .
@@ -162,7 +187,7 @@ class MomoService
                 return [
                     'success' => true,
                     'order_id' => $orderId,
-                    'amount' => $amount,
+                    'amount' => (string)$amount,
                     'transaction_id' => $transId,
                     'message' => 'Payment successful',
                 ];

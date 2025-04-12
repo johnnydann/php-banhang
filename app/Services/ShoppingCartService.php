@@ -2,75 +2,66 @@
 // app/Services/ShoppingCartService.php
 namespace App\Services;
 
-use App\Helpers\SessionHelper;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use App\Models\CartItem;
 
 class ShoppingCartService
 {
-    private const CART_SESSION_KEY = 'cart';
 
     /**
      * Lấy giỏ hàng hiện tại
      */
     public function getCart(): array
     {
-        Log::info('Lấy giỏ hàng từ session');
-        
-        // Sử dụng SessionHelper để lấy giỏ hàng
-        $cart = SessionHelper::getObjectFromJson(self::CART_SESSION_KEY);
-        Log::info('Giỏ hàng trong session:', ['cart' => $cart]);
-        
-        // Trả về giỏ hàng trống nếu không tìm thấy
-        if (!$cart) {
+        $userId = Auth::id();
+        Log::info("Lấy giỏ hàng từ DB cho user_id: {$userId}");
+
+        $items = CartItem::where('user_id', $userId)->with('product')->get();
+
+        $cartItems = $items->map(function ($item) {
             return [
-                'items' => [],
-                'total' => 0,
+                'product_id' => $item->product_id,
+                'name' => $item->product->name,
+                'image' => $item->product->image_url,
+                'price' => $item->product->price,
+                'quantity' => $item->quantity,
             ];
-        }
-        
-        return $cart;
+        });
+
+        $total = $cartItems->sum(function ($item) {
+            return $item['price'] * $item['quantity'];
+        });
+
+        return [
+            'items' => $cartItems,
+            'total' => $total,
+        ];
     }
+    
 
     /**
      * Thêm sản phẩm vào giỏ hàng
      */
     public function addToCart(int $productId, string $name, string $image, float $price, int $quantity = 1): array
     {
-        $cart = $this->getCart();
-        $items = collect($cart['items']);
-        
-        // Kiểm tra sản phẩm đã có trong giỏ hàng chưa
-        $existingItemIndex = $items->search(function ($item) use ($productId) {
-            return $item['product_id'] == $productId;
-        });
-        
-        if ($existingItemIndex !== false) {
-            // Cập nhật số lượng nếu sản phẩm đã tồn tại
-            $items[$existingItemIndex]['quantity'] += $quantity;
+        $userId = Auth::id();
+
+        $item = CartItem::where('user_id', $userId)->where('product_id', $productId)->first();
+
+        if ($item) {
+            $item->quantity += $quantity;
+            $item->save();
         } else {
-            // Thêm sản phẩm mới vào giỏ hàng
-            $items->push([
+            CartItem::create([
+                'user_id' => $userId,
                 'product_id' => $productId,
-                'name' => $name,
-                'image' => $image,
-                'price' => $price,
-                'quantity' => $quantity
+                'quantity' => $quantity,
             ]);
         }
-        
-        $total = $this->calculateTotal($items);
-        
-        $cart = [
-            'items' => $items->toArray(),
-            'total' => $total,
-        ];
-        
-        // Lưu giỏ hàng vào session sử dụng SessionHelper
-        SessionHelper::setObjectAsJson(self::CART_SESSION_KEY, $cart);
-        Log::info('Đã lưu giỏ hàng vào session', ['cart' => $cart]);
-        
-        return $cart;
+
+        return $this->getCart();
     }
 
     /**
@@ -78,26 +69,11 @@ class ShoppingCartService
      */
     public function removeFromCart(int $productId): array
     {
-        $cart = $this->getCart();
-        $items = collect($cart['items']);
-        
-        // Xóa sản phẩm khỏi giỏ hàng
-        $items = $items->reject(function ($item) use ($productId) {
-            return $item['product_id'] == $productId;
-        });
-        
-        $total = $this->calculateTotal($items);
-        
-        $cart = [
-            'items' => $items->toArray(),
-            'total' => $total,
-        ];
-        
-        // Lưu giỏ hàng vào session
-        SessionHelper::setObjectAsJson(self::CART_SESSION_KEY, $cart);
-        Log::info('Đã cập nhật giỏ hàng trong session sau khi xóa sản phẩm');
-        
-        return $cart;
+        $userId = Auth::id();
+
+        CartItem::where('user_id', $userId)->where('product_id', $productId)->delete();
+
+        return $this->getCart();
     }
 
     /**
@@ -105,33 +81,20 @@ class ShoppingCartService
      */
     public function updateQuantity(int $productId, int $quantity): array
     {
+        $userId = Auth::id();
+
         if ($quantity <= 0) {
             return $this->removeFromCart($productId);
         }
-        
-        $cart = $this->getCart();
-        $items = collect($cart['items']);
-        
-        // Cập nhật số lượng sản phẩm
-        $items = $items->map(function ($item) use ($productId, $quantity) {
-            if ($item['product_id'] == $productId) {
-                $item['quantity'] = $quantity;
-            }
-            return $item;
-        });
-        
-        $total = $this->calculateTotal($items);
-        
-        $cart = [
-            'items' => $items->toArray(),
-            'total' => $total,
-        ];
-        
-        // Lưu giỏ hàng vào session
-        SessionHelper::setObjectAsJson(self::CART_SESSION_KEY, $cart);
-        Log::info('Đã cập nhật số lượng sản phẩm trong giỏ hàng');
-        
-        return $cart;
+
+        $item = CartItem::where('user_id', $userId)->where('product_id', $productId)->first();
+
+        if ($item) {
+            $item->quantity = $quantity;
+            $item->save();
+        }
+
+        return $this->getCart();
     }
 
     /**
@@ -139,9 +102,8 @@ class ShoppingCartService
      */
     public function clearCart(): void
     {
-        // Xóa giỏ hàng khỏi session
-        SessionHelper::setObjectAsJson(self::CART_SESSION_KEY, null);
-        Log::info('Đã xóa giỏ hàng');
+        $userId = Auth::id();
+        CartItem::where('user_id', $userId)->delete();
     }
 
     /**
