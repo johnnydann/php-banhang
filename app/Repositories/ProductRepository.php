@@ -74,4 +74,14 @@ class ProductRepository implements ProductRepositoryInterface
     {
         return Product::where('is_active', false)->get();
     }
+
+    public function getPaginatedActiveProducts($pageSize, $pageNumber)
+    {
+        return Product::where('is_active', true)
+                    ->orderByDesc('id')
+                    ->skip(($pageNumber - 1) * $pageSize)
+                    ->take($pageSize)
+                    ->get();
+    }
+
 }

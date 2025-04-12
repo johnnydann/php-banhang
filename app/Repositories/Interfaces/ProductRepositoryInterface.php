@@ -16,4 +16,6 @@ interface ProductRepositoryInterface
     public function searchByName(string $name);
     public function activate(int $id);
     public function getInactiveProducts();
+    public function getPaginatedActiveProducts(int $pageSize, int $pageNumber);
+
 }
