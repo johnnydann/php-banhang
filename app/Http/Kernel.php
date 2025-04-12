@@ -64,5 +64,10 @@ class Kernel extends HttpKernel
         'signed' => \App\Http\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+        // 'role' => \App\Http\Middleware\CheckRole::class,
+        'role' => \App\Http\Middleware\CheckRole::class, // Hoặc \Spatie\Permission\Middleware\RoleMiddleware::class nếu bạn muốn dùng middleware của Spatie
+        'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+        'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+        \App\Http\Middleware\OptimizeImageHeaders::class
     ];
 }
