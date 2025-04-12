@@ -1,0 +1,296 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #6e8efb, #a777e3);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.login-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 450px;
+    padding: 20px;
+}
+
+.login-container {
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    animation: fadeIn 0.5s ease-in-out;
+    position: relative;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.logo i {
+    font-size: 2.2rem;
+    color: #6e8efb;
+}
+
+.login-header h1 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.subtitle {
+    font-size: 0.9rem;
+    color: #777;
+    margin-top: 5px;
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+    font-size: 0.9rem;
+    color: #555;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.input-wrapper .icon-left {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    shape-outside: margin-box;
+    transform: translateY(-50%);
+    color: #6e8efb;
+    font-size: 1.1rem;
+}
+
+.input-wrapper .toggle-password {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6e8efb;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.input-wrapper .toggle-password:hover {
+    color: #5d78e6;
+}
+
+.input-wrapper input {
+    width: 100%;
+    padding: 12px 45px;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 1rem;
+    background: #f9f9f9;
+    transition: all 0.3s ease;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.input-wrapper input:focus {
+    border-color: #6e8efb;
+    box-shadow: 0 0 8px rgba(110, 142, 251, 0.3);
+    background: #fff;
+    outline: none;
+}
+
+.options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.remember-me {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.forgot-password {
+    font-size: 0.9rem;
+    color: #6e8efb;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.forgot-password:hover {
+    color: #5d78e6;
+    text-decoration: underline;
+}
+
+.btn-login {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(90deg, #6e8efb, #a777e3);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(110, 142, 251, 0.3);
+}
+
+.btn-login:hover {
+    background: linear-gradient(90deg, #5d78e6, #9366d8);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(110, 142, 251, 0.5);
+}
+
+.btn-login i {
+    font-size: 1.1rem;
+}
+
+.login-footer {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 0.85rem;
+    color: #777;
+}
+
+.login-footer a {
+    color: #6e8efb;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.login-footer a:hover {
+    color: #5d78e6;
+    text-decoration: underline;
+}
+
+/* Thiết kế lại thông báo lỗi dạng toast notification */
+.toast-container {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+
+.toast-notification {
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Căn giữa theo chiều ngang */
+    padding: 12px 15px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    min-width: 300px;
+    max-width: 350px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    animation: slideInFromRight 0.5s ease-in-out;
+}
+
+@keyframes slideInFromRight {
+    from { opacity: 0; transform: translateX(100%); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.toast-error {
+    background: linear-gradient(90deg, #ff6b6b, #ff8e53);
+    color: #fff;
+    border: none;
+}
+
+.toast-icon {
+    margin-right: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.toast-icon i {
+    font-size: 1.3rem;
+    animation: shake 0.5s ease-in-out infinite;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-3px); }
+    75% { transform: translateX(3px); }
+}
+
+.toast-content {
+    flex: 1;
+    text-align: center; /* Căn giữa nội dung chữ */
+    line-height: 1.5; /* Đảm bảo khoảng cách dòng đồng đều */
+}
+
+.toast-content span {
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 0.5px; /* Đảm bảo chữ đồng đều */
+}
+
+.toast-close {
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    padding: 5px;
+    transition: opacity 0.3s ease;
+    display: flex;
+    align-items: center;
+}
+
+.toast-close:hover {
+    opacity: 0.7;
+}
+
+.toast-close i {
+    font-size: 1rem;
+}
+
+@media (max-width: 576px) {
+    .login-container {
+        padding: 20px;
+        margin: 15px;
+    }
+
+    .login-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .btn-login {
+        padding: 10px;
+    }
+
+    .toast-notification {
+        min-width: 250px;
+        max-width: 300px;
+    }
+}
